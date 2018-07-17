@@ -1,4 +1,5 @@
- $(document).ready(function() {
+// Document Ready Function
+$(document).ready(function() {
     // Initialize Firebase
     var config = {
         apiKey: "AIzaSyAgI2MGgnlwTdpSWs8ZimvYD5NO3U3nV4k",
@@ -14,53 +15,36 @@
     // Setting Firebase to a Variable
     var database = firebase.database();
 
-    // Putting Random "Trains" in my DB for Starting Trains
-    // database.ref().set({
-        // firstTrain: {name: "Space Caravan",
-        //     destination: "The Vast Emptyness of Space",
-        //     firstTrain: "1200",
-        //     frequency: "200000"},
-
-        // secondTrain: {name: "Hippie Run Express",
-        //     destination: "California",
-        //     firstTrain: "900",
-        //     frequency: "45"},
-
-        // lastTrain: {name: "Gentle People Express",
-        //     destination: "Saskatewan, Canada",
-        //     firstTrain: "800",
-        //     frequency: "25"},
-    // })
-   
-    // Writing Random Starting Trains to Page
-    // $(".table").append(`<tr><td>${database.ref().firstTrain.name}</td></tr>`)
-    
-
     // Controls Submit Button Function
     $("#submitBtn").on("click", function (event) {
         event.preventDefault();
 
-        name = $("#train-name").val().trim();
-        destination = $("#train-destination").val().trim();
-        firstTrain = $("#first-train-time").val().trim();
-        frequency = $("#train-frequency").val().trim();
+        // Creating Variables to Reference Input Fields Quicker
+        var name = $("#train-name").val().trim();
+        var destination = $("#train-destination").val().trim();
+        var firstTrain = $("#first-train-time").val().trim();
+        var frequency = $("#train-frequency").val().trim();
 
-        // var firstTimeConverted = moment(firstTrain, "HH:mm");
-        // var firstTimeConverted = moment(firstTrain, "HH:mm").subtract(1, "years");
-        // var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
-        // var tRemainder = diffTime % frequency;
-        // var tMinutesTillTrain = frequency - tRemainder;
-        // var nextTrain = moment().add(tMinutesTillTrain, "minutes")
+        // Time Conversion for Next Train Arrival
+        var firstTimeConverted = moment(firstTrain, "HH:mm");
+        var firstTimeConverted = moment(firstTrain, "HH:mm").subtract(1, "years");
+        var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+        var tRemainder = diffTime % frequency;
+        var tMinutesTillTrain = frequency - tRemainder;
+        var nextTrain = moment().add(tMinutesTillTrain, "minutes")
+        var nextArrival = moment(nextTrain).format("hh:mm")
 
+        // Pushes Data to DB
         database.ref().push({
             name: name,
             destination: destination,
             firstTrain: firstTrain,
             frequency: frequency,
-            // nextTrain: nextTrain
+            nextTrain: nextArrival
         })
     });
 
+    // Writes Last Added Child Element to Page
     database.ref().on("child_added", function(snapshot) {
         $(".table").append(`<tr><td>${snapshot.val().name}</td><td>${snapshot.val().destination}</td><td>${snapshot.val().frequency}</td><td>${snapshot.val().nextTrain}</td><td></td>`)
     })
