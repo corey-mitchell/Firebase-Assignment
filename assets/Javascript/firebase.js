@@ -15,42 +15,31 @@ $(document).ready(function() {
     // Setting Firebase to a Variable
     var database = firebase.database();
 
-    // Creating a Variable Object for Starting Trains so That I Can Populate the Page with Some Random Trains.
-    var startingTrains = {
-        firstTrain: {name: "Planet Caravan", destination: "The Vast Emptyness of Space", firstTrain: "0000", frequency: "2000"},
-        secondTrain: {name: "Hippy Run", destination: "California", firstTrain: "0420", frequency: "15"},
-        thirdTrain: {name: "Soul Train", destination: "Funky Town", firstTrain: "1200", frequency: "45"}
-    }
+    // Writes Train Elements to Page on Load
+    // Added Another Time Conversion Here so that the next arrival time would update with the page.
+    database.ref().on("value", function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            // var childKey = childSnapshot.key;
+            var childData = childSnapshot.val();
 
-    // Set's Database to startingTrains var
-    database.ref().update({startingTrains})
-
-    // Updates the Page on Load so That Starting Trains are Displayed on Load
-    // Used .once method instead of .on because everytime I would add a new item it would rewrite starting trains to page
-    database.ref().once("value", function() {
-
-        // A Work Around for Looping Through the startingTrains Object.
-        Object.keys(startingTrains).forEach(function(key) {
-            //Moment Time Conversion
-            var firstTrainConverted = moment(startingTrains[key].firstTrain, "HH:mm").subtract(1, "years");
+            // Moment Time Conversion
+            var firstTrainConverted = moment(childData.firstTrain, "HH:mm").subtract(1, "years");
             var diffTime = moment().diff(moment(firstTrainConverted), "minutes");
-            var frequency = startingTrains[key].frequency
-            var tRemainder = diffTime % frequency;
-            var tMinutesTillTrain = frequency - tRemainder;
+            var tRemainder = diffTime % childData.frequency;
+            var tMinutesTillTrain = childData.frequency - tRemainder;
             var nextArrival = moment().add(tMinutesTillTrain, "minutes");
-            var arrivalTime = moment(nextArrival).format("hh:mm")
+            var arrivalTime = moment(nextArrival).format("hh:mm A")
 
-            // Writes Starting Trains to Page
-            $(".table").append(`<tr><td>${startingTrains[key].name}</td><td>${startingTrains[key].destination}</td><td>${startingTrains[key].frequency}</td><td>${arrivalTime}</td><td>${tMinutesTillTrain}</td>`)
+        
+            $(".table").append(`<tr><td>${childData.name}</td><td>${childData.destination}</td><td>${childData.frequency}</td><td>${arrivalTime}</td><td>${tMinutesTillTrain}</td>`)
         })
     })
-
 
     // Controls Submit Button Function
     $("#submitBtn").on("click", function (event) {
         event.preventDefault();
 
-        // Creating Variables to Reference Input Fields Quicker
+        // Creating Variables Assigned Input Fields
         var name = $("#train-name").val().trim();
         var destination = $("#train-destination").val().trim();
         var firstTrain = $("#first-train-time").val().trim();
@@ -62,25 +51,26 @@ $(document).ready(function() {
         var tRemainder = diffTime % frequency;
         var tMinutesTillTrain = frequency - tRemainder;
         var nextArrival = moment().add(tMinutesTillTrain, "minutes");
-        var arrivalTime = moment(nextArrival).format("hh:mm")
+        var arrivalTime = moment(nextArrival).format("hh:mm A")
 
         // Pushes Data to DB
-        database.ref().update({
+        database.ref().push({
             name: name,
             destination: destination,
             firstTrain: firstTrain,
             frequency: frequency,
-            nextTrain: arrivalTime,
-            minutesAway: tMinutesTillTrain
+            // nextTrain: arrivalTime,
+            // minutesAway: tMinutesTillTrain,
+            dateAdded: firebase.database.ServerValue.TIMESTAMP
 
         })
    
-        // Writes Added Train Elements to Page
-        // For some reason, it was adding double items so I used the .once method instead of .on to keep it from duplicating
-        database.ref().once("value", function(snapshot) {
-            console.log(snapshot.val())
-            $(".table").append(`<tr><td>${snapshot.val().name}</td><td>${snapshot.val().destination}</td><td>${snapshot.val().frequency}</td><td>${snapshot.val().nextTrain}</td><td>${snapshot.val().minutesAway}</td>`)
+        // Writes Added Train to Page
+        database.ref().orderByChild("dateAdded").limitToLast(1).on("child_added", function(snapshot) {
+            var data = snapshot.val();
+            $(".table").append(`<tr><td>${data.name}</td><td>${data.destination}</td><td>${data.frequency}</td><td>${arrivalTime}</td><td>${tMinutesTillTrain}</td>`)
         })
+
     });
 
 })
