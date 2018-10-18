@@ -68,8 +68,15 @@ $(document).ready(function() {
         // Writes Added Train to Page
         database.ref().orderByChild("dateAdded").limitToLast(1).on("child_added", function(snapshot) {
             var data = snapshot.val();
-            $(".table").append(`<tr><td>${data.name}</td><td>${data.destination}</td><td>${data.frequency}</td><td>${arrivalTime}</td><td>${tMinutesTillTrain}</td>`)
+            $(".table").html(`<tr><td>${data.name}</td><td>${data.destination}</td><td>${data.frequency}</td><td>${arrivalTime}</td><td>${tMinutesTillTrain}</td>`)
         })
+
+        // Resets Form Values
+        $("#train-name").val('');
+        $("#train-destination").val('');
+        $("#first-train-time").val('');
+        $("#train-frequency").val('');
+
 
     });
 
