@@ -44,5 +44,9 @@ th {
     margin: 15px;
     border: 1px solid #0000002c;
     border-radius: 5px;
+}
 
+#submitBtn:hover {
+     /* this one is for you cole ^__^ */
+    cursor: pointer;
 }
